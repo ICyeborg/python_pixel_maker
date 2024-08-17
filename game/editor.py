@@ -20,6 +20,9 @@ class Editor:
         self.support_line_surface.set_colorkey('green')
         self.support_line_surface.set_alpha(30)
 
+        # selection
+        self.selection_index = 2
+
     # input
     def event_loop(self):
         for event in pygame.event.get():
@@ -27,6 +30,7 @@ class Editor:
                 pygame.quit()
                 sys.exit()
             self.pan_input(event)
+            self.select_hotkeys(event)
 
     def pan_input(self, event):
         # middle mouse button pressed / released
@@ -47,6 +51,14 @@ class Editor:
         # panning update
         if self.pan_active:
             self.origin = vector(mouse_pos()) - self.pan_offset
+
+    def select_hotkeys(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHT:
+                self.selection_index += 1
+            if event.key == pygame.K_LEFT:
+                self.selection_index -= 1
+        self.selection_index = max(2,(min(self.selection_index, 18)))
 
     # drawing
     def draw_tile_lines(self):
