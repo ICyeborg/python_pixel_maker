@@ -3,7 +3,6 @@ from settings import *
 from editor import Editor
 from pygame.image import load
 
-
 class Main:
     def __init__(self):
         pygame.init()

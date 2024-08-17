@@ -4,6 +4,8 @@ from pygame.mouse import get_pressed as mouse_buttons
 from pygame.mouse import get_pos as mouse_pos
 from settings import *
 
+from menu import Menu
+
 
 class Editor:
     def __init__(self):
@@ -23,6 +25,9 @@ class Editor:
         # selection
         self.selection_index = 2
 
+        # menu
+        self.menu = Menu()
+
     # input
     def event_loop(self):
         for event in pygame.event.get():
@@ -31,6 +36,7 @@ class Editor:
                 sys.exit()
             self.pan_input(event)
             self.select_hotkeys(event)
+            self.menu_click(event)
 
     def pan_input(self, event):
         # middle mouse button pressed / released
@@ -80,6 +86,10 @@ class Editor:
 
         self.display_surface.blit(self.support_line_surface,(0,0))
 
+    def menu_click(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(mouse_pos()):
+            self.selection_index = self.menu.click(mouse_pos(), mouse_buttons())
+
     def run(self, dt):
 
         self.event_loop()
@@ -88,3 +98,4 @@ class Editor:
         self.display_surface.fill('white')
         self.draw_tile_lines()
         pygame.draw.circle(self.display_surface, 'red', self.origin, 10)
+        self.menu.display(self.selection_index)
