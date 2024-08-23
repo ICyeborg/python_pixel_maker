@@ -8,11 +8,13 @@ from menu import Menu
 
 
 class Editor:
-    def __init__(self):
+    def __init__(self, land_tiles):
         # main setup
         self.display_surface = pygame.display.get_surface()
         self.canvas_data = {}
 
+        # imports
+        self.land_tiles = land_tiles
         # navigation
         self.origin = vector()
         self.pan_active = False
@@ -45,6 +47,25 @@ class Editor:
 
         return col, row
 
+    def check_neighbors(self, cell_pos):
+
+        # create a local cluster
+        cluster_size = 3
+        local_cluster = [(cell_pos[0] + col - int(cluster_size / 2), cell_pos[1] + row - int(cluster_size / 2))
+                         for col in range(cluster_size)
+                         for row in range(cluster_size)]
+
+        # check neighbors
+        for cell in local_cluster:
+            if cell in self.canvas_data:
+                self.canvas_data[cell].terrain_neighbors = []
+                for name, side in NEIGHBOR_DIRECTIONS.items():
+                    neighbor_cell = (cell[0] + side[0], cell[1] + side[1])
+
+                    if neighbor_cell in self.canvas_data:
+                        if self.canvas_data[neighbor_cell].has_terrain:
+                            self.canvas_data[cell].terrain_neighbors.append(name)
+
     def canvas_add(self):
         if mouse_buttons()[0] and not self.menu.rect.collidepoint(mouse_pos()):
             current_cell = self.get_current_cell()
@@ -54,7 +75,8 @@ class Editor:
                 if current_cell in self.canvas_data:
                     self.canvas_data[current_cell].add_id(self.selection_index)
                 else:
-                    self.canvas_data[current_cell] = CancasTile(self.selection_index)
+                    self.canvas_data[current_cell] = CanvasTile(self.selection_index)
+                self.check_neighbors(current_cell)
                 self.last_selected_cell = current_cell
 
     # input
@@ -96,6 +118,10 @@ class Editor:
                 self.selection_index -= 1
         self.selection_index = max(2, (min(self.selection_index, 18)))
 
+    def menu_click(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(mouse_pos()):
+            self.selection_index = self.menu.click(mouse_pos(), mouse_buttons())
+
     # drawing
     def draw_tile_lines(self):
         cols = WINDOW_WIDTH // TILE_SIZE
@@ -116,25 +142,49 @@ class Editor:
 
         self.display_surface.blit(self.support_line_surface, (0, 0))
 
-    def menu_click(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and self.menu.rect.collidepoint(mouse_pos()):
-            self.selection_index = self.menu.click(mouse_pos(), mouse_buttons())
+    def draw_level(self):
+        for cell_pos, tile in self.canvas_data.items():
+            pos = self.origin + vector(cell_pos) * TILE_SIZE
+
+            # water
+            if tile.has_water:
+                test_surf = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                test_surf.fill('blue')
+                self.display_surface.blit(test_surf, pos)
+
+            # terrain
+            if tile.has_terrain:
+                terrain_string = ''.join(tile.terrain_neighbors)
+                terrain_style = terrain_string if terrain_string in self.land_tiles else 'X'
+                self.display_surface.blit(self.land_tiles[terrain_style], pos)
+
+            # coins
+            if tile.coin:
+                test_surf = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                test_surf.fill('yellow')
+                self.display_surface.blit(test_surf, pos)
+            # enemy
+            if tile.enemy:
+                test_surf = pygame.Surface((TILE_SIZE, TILE_SIZE))
+                test_surf.fill('black')
+                self.display_surface.blit(test_surf, pos)
 
     def run(self, dt):
 
         self.event_loop()
 
         # drawing
-        self.display_surface.fill('white')
+        self.display_surface.fill('grey')
+        self.draw_level()
         self.draw_tile_lines()
         pygame.draw.circle(self.display_surface, 'red', self.origin, 10)
         self.menu.display(self.selection_index)
 
 
-class CancasTile():
+class CanvasTile:
     def __init__(self, tile_id):
         # terrain
-        self._has_terrain = False
+        self.has_terrain = False
         self.terrain_neighbors = []
 
         # water
@@ -155,7 +205,11 @@ class CancasTile():
     def add_id(self, tile_id):
         options = {key: value['style'] for key, value in EDITOR_DATA.items()}
         match options[tile_id]:
-            case 'terrain': self._has_terrain = True
-            case 'water': self.has_water = True
-            case 'coin': self.coin = tile_id
-            case 'enemy': self.enemy = tile_id
+            case 'terrain':
+                self.has_terrain = True
+            case 'water':
+                self.has_water = True
+            case 'coin':
+                self.coin = tile_id
+            case 'enemy':
+                self.enemy = tile_id
