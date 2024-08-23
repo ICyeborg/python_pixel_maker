@@ -17,7 +17,6 @@ class Menu:
                     self.menu_surfaces[value['menu']] = [(key, load(value['menu_surf']))]
                 else:
                     self.menu_surfaces[value['menu']].append((key, load(value['menu_surf'])))
-        print(self.menu_surfaces)
 
     def click(self, mouse_pos, mouse_button):
         for sprite in self.buttons:

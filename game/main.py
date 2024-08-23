@@ -21,7 +21,6 @@ class Main:
 
     def imports(self):
         self.land_tiles = import_folder_dict('../graphics/terrain/land')
-        print(self.land_tiles)
 
     def run(self):
         while True:
