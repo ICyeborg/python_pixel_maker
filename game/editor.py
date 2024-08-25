@@ -47,7 +47,8 @@ class Editor:
         CanvasObject((200, WINDOW_HEIGHT / 2), self.animations[0]['frames'], 0, self.origin, self.canvas_objects)
 
         # sky
-        self.sky_handle = CanvasObject((WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), [self.sky_handle_surf], 1, self.origin, self.canvas_objects)
+        self.sky_handle = CanvasObject((WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), [self.sky_handle_surf], 1, self.origin,
+                                       self.canvas_objects)
 
     def get_current_cell(self):
         distance_to_origin = vector(mouse_pos()) - self.origin
@@ -105,6 +106,9 @@ class Editor:
                     'length': len(graphics)
                 }
 
+        # preview
+        self.preview_surfaces = {key: load(value['preview']) for key, value in EDITOR_DATA.items() if value['preview']}
+
     def animation_update(self, dt):
         for value in self.animations.values():
             value['frame index'] += ANIMATION_SPEED * dt
@@ -131,7 +135,8 @@ class Editor:
                     self.last_selected_cell = current_cell
             else:
                 if not self.object_timer.active:
-                    CanvasObject(mouse_pos(), self.animations[self.selection_index]['frames'], self.selection_index, self.origin, self.canvas_objects)
+                    CanvasObject(mouse_pos(), self.animations[self.selection_index]['frames'], self.selection_index,
+                                 self.origin, self.canvas_objects)
                     self.object_timer.activate()
 
     def canvas_remove(self):
@@ -271,6 +276,46 @@ class Editor:
                 self.display_surface.blit(surf, rect)
         self.canvas_objects.draw(self.display_surface)
 
+    def preview(self):
+        selected_object = self.mouse_on_object()
+        if not self.menu.rect.collidepoint(mouse_pos()):
+            if selected_object:
+                rect = selected_object.rect.inflate(10, 10)
+                color = 'green'
+                width = 3
+                size = 15
+
+                pygame.draw.lines(self.display_surface, color, False,
+                                  ((rect.left, rect.top + size),
+                                   (rect.topleft),
+                                   (rect.left + size, rect.top)), width)
+                pygame.draw.lines(self.display_surface, color, False,
+                                  ((rect.right, rect.top + size),
+                                   (rect.topright),
+                                   (rect.right - size, rect.top)), width)
+                pygame.draw.lines(self.display_surface, color, False,
+                                  ((rect.left, rect.bottom - size),
+                                   (rect.bottomleft),
+                                   (rect.left + size, rect.bottom)), width)
+                pygame.draw.lines(self.display_surface, color, False,
+                                  ((rect.right, rect.bottom - size),
+                                   (rect.bottomright),
+                                   (rect.right - size, rect.bottom)), width)
+            else:
+                type_dict = {key: value['type'] for key, value in EDITOR_DATA.items()}
+                surf = self.preview_surfaces[self.selection_index].copy()
+                surf.set_alpha(200)
+
+                # tile
+                if type_dict[self.selection_index] == 'tile':
+                    current_cell = self.get_current_cell()
+                    rect = surf.get_rect(topleft=self.origin + vector(current_cell) * TILE_SIZE)
+                # object
+                if type_dict[self.selection_index] == 'object':
+                    rect = surf.get_rect(center=mouse_pos())
+                self.display_surface.blit(surf, rect)
+
+    # update
     def run(self, dt):
 
         self.event_loop()
@@ -285,6 +330,7 @@ class Editor:
         self.draw_level()
         self.draw_tile_lines()
         pygame.draw.circle(self.display_surface, 'red', self.origin, 10)
+        self.preview()
         self.menu.display(self.selection_index)
 
 
@@ -375,7 +421,7 @@ class CanvasObject(pygame.sprite.Sprite):
         self.frame_index += ANIMATION_SPEED * dt
         self.frame_index = 0 if self.frame_index >= len(self.frames) else self.frame_index
         self.image = self.frames[int(self.frame_index)]
-        self.rect = self.image.get_rect(midbottom = self.rect.midbottom)
+        self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
 
     def pan_pos(self, origin):
         self.rect.topleft = origin + self.distance_to_origin
