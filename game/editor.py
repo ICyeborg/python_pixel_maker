@@ -8,6 +8,7 @@ from support import *
 from settings import *
 
 from menu import Menu
+from timer import Timer
 
 
 class Editor:
@@ -40,6 +41,7 @@ class Editor:
         # objects
         self.canvas_objects = pygame.sprite.Group()
         self.object_drag_active = False
+        self.object_timer = Timer(400)
 
         # player
         CanvasObject((200, WINDOW_HEIGHT / 2), self.animations[0]['frames'], 0, self.origin, self.canvas_objects)
@@ -48,17 +50,17 @@ class Editor:
         self.sky_handle = CanvasObject((WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), [self.sky_handle_surf], 1, self.origin, self.canvas_objects)
 
     def get_current_cell(self):
-        distance_to_orogin = vector(mouse_pos()) - self.origin
+        distance_to_origin = vector(mouse_pos()) - self.origin
 
-        if distance_to_orogin.x > 0:
-            col = int(distance_to_orogin.x / TILE_SIZE)
+        if distance_to_origin.x > 0:
+            col = int(distance_to_origin.x / TILE_SIZE)
         else:
-            col = int(distance_to_orogin.x / TILE_SIZE) - 1
+            col = int(distance_to_origin.x / TILE_SIZE) - 1
 
-        if distance_to_orogin.y > 0:
-            row = int(distance_to_orogin.y / TILE_SIZE)
+        if distance_to_origin.y > 0:
+            row = int(distance_to_origin.y / TILE_SIZE)
         else:
-            row = int(distance_to_orogin.y / TILE_SIZE) - 1
+            row = int(distance_to_origin.y / TILE_SIZE) - 1
 
         return col, row
 
@@ -109,6 +111,11 @@ class Editor:
             if value['frame index'] >= value['length']:
                 value['frame index'] = 0
 
+    def mouse_on_object(self):
+        for sprite in self.canvas_objects:
+            if sprite.rect.collidepoint(mouse_pos()):
+                return sprite
+
     def canvas_add(self):
         if mouse_buttons()[0] and not self.menu.rect.collidepoint(mouse_pos()) and not self.object_drag_active:
             current_cell = self.get_current_cell()
@@ -123,10 +130,19 @@ class Editor:
                     self.check_neighbors(current_cell)
                     self.last_selected_cell = current_cell
             else:
-                CanvasObject(mouse_pos(), self.animations[self.selection_index]['frames'], self.selection_index, self.origin, self.canvas_objects)
+                if not self.object_timer.active:
+                    CanvasObject(mouse_pos(), self.animations[self.selection_index]['frames'], self.selection_index, self.origin, self.canvas_objects)
+                    self.object_timer.activate()
 
     def canvas_remove(self):
         if mouse_buttons()[2] and not self.menu.rect.collidepoint(mouse_pos()):
+            # delete object
+            selected_object = self.mouse_on_object()
+            if selected_object:
+                if EDITOR_DATA[selected_object.tile_id]['style'] not in ('player', 'sky'):
+                    selected_object.kill()
+
+            # delete tiles
             if self.canvas_data:
                 current_cell = self.get_current_cell()
                 if current_cell in self.canvas_data:
@@ -262,6 +278,7 @@ class Editor:
         # updating
         self.animation_update(dt)
         self.canvas_objects.update(dt)
+        self.object_timer.update()
 
         # drawing
         self.display_surface.fill('grey')
