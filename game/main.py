@@ -4,6 +4,7 @@ from pygame.image import load
 from support import *
 from level import Level
 from editor import vector
+from os import walk
 
 
 class Main:
@@ -34,6 +35,13 @@ class Main:
         self.diamond = import_folder('../graphics/items/diamond')
         self.particle = import_folder('../graphics/items/particle')
 
+        # palm trees
+        self.palms = {folder: import_folder(f'../graphics/terrain/palm/{folder}') for folder in list(walk('../graphics/terrain/palm'))[0][1]}
+
+        # enemies
+        self.spikes = load('../graphics/enemies/spikes/spikes.png').convert_alpha()
+        self.tooth = {folder: import_folder(f'../graphics/enemies/tooth/{folder}') for folder in list(walk('../graphics/enemies/tooth'))[0][1]}
+        self.shell = {folder: import_folder(f'../graphics/enemies/shell_left/{folder}') for folder in list(walk('../graphics/enemies/shell_left'))[0][1]}
     def toggle(self):
         self.editor_active = not self.editor_active
 
@@ -48,7 +56,11 @@ class Main:
                                    'gold': self.gold,
                                    'silver': self.silver,
                                    'diamond': self.diamond,
-                                   'particle': self.particle
+                                   'particle': self.particle,
+                                   'palms': self.palms,
+                                   'spikes': self.spikes,
+                                   'tooth': self.tooth,
+                                   'shell': self.shell
                                })
 
     def run(self):

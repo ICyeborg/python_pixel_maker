@@ -1,7 +1,7 @@
 import sys
 from settings import *
 from support import *
-from game.sprites import Generic, Animated, Particle, Coin, Player
+from game.sprites import Generic, Animated, Particle, Coin, Spikes, Tooth, Shell, Player
 
 
 class Level:
@@ -12,6 +12,7 @@ class Level:
         # groups
         self.all_sprites = pygame.sprite.Group()
         self.coin_sprites = pygame.sprite.Group()
+        self.damage_sprites = pygame.sprite.Group()
 
         self.build_level(grid, asset_dict)
 
@@ -30,9 +31,27 @@ class Level:
 
                 match data:
                     case 0: self.player = Player(pos, self.all_sprites)
+
+                    # coins
                     case 4: Coin('gold', pos, asset_dict['gold'], [self.all_sprites, self.coin_sprites])
                     case 5: Coin('silver', pos, asset_dict['silver'], [self.all_sprites, self.coin_sprites])
                     case 6: Coin('diamond', pos, asset_dict['diamond'], [self.all_sprites, self.coin_sprites])
+
+                    # enemies
+                    case 7: Spikes(pos, asset_dict['spikes'], [self.all_sprites, self.damage_sprites])
+                    case 8: Tooth(pos, asset_dict['tooth'], [self.all_sprites, self.damage_sprites])
+                    case 9: Shell('left', pos, asset_dict['shell'], self.all_sprites)
+                    case 10: Shell('right', pos, asset_dict['shell'], self.all_sprites)
+
+                    # palm trees
+                    case 11: Animated(pos, asset_dict['palms']['small_fg'], self.all_sprites)
+                    case 12: Animated(pos, asset_dict['palms']['large_fg'], self.all_sprites)
+                    case 13: Animated(pos, asset_dict['palms']['left_fg'], self.all_sprites)
+                    case 14: Animated(pos, asset_dict['palms']['right_fg'], self.all_sprites)
+                    case 15: Animated(pos, asset_dict['palms']['small_bg'], self.all_sprites)
+                    case 16: Animated(pos, asset_dict['palms']['large_bg'], self.all_sprites)
+                    case 17: Animated(pos, asset_dict['palms']['left_bg'], self.all_sprites)
+                    case 18: Animated(pos, asset_dict['palms']['right_bg'], self.all_sprites)
 
     def get_coins(self):
         collided_coins = pygame.sprite.spritecollide(self.player, self.coin_sprites, True)

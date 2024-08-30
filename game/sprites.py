@@ -10,6 +10,7 @@ class Generic(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
 
 
+# animates sprites
 class Animated(Generic):
     def __init__(self, pos, assets, group):
         self.animation_frames = assets
@@ -43,6 +44,36 @@ class Coin(Animated):
         super().__init__(pos, assets, group)
         self.rect = self.image.get_rect(center=pos)
         self.coin_type = coin_type
+
+
+# enemies
+class Spikes(Generic):
+    def __init__(self, pos, surf, group):
+        super().__init__(pos, surf, group)
+
+
+class Tooth(Generic):
+    def __init__(self, pos, assets, group):
+        self.animation_frames = assets
+        self.frame_index = 0
+        self.direction = 'right'
+        surf = self.animation_frames[f'run_{self.direction}'][self.frame_index]
+        super().__init__(pos, surf, group)
+        self.rect.bottom = self.rect.top + TILE_SIZE
+
+
+class Shell(Generic):
+    def __init__(self, direction, pos, assets, group):
+        self.animation_frames = assets.copy()
+        self.frame_index = 0
+        self.direction = direction
+        if direction == 'right':
+            for key, value in self.animation_frames.items():
+                self.animation_frames[key] = [pygame.transform.flip(surf, True,  False)  for surf in value]
+        self.status = 'idle'
+        surf = self.animation_frames[self.status][self.frame_index]
+        super().__init__(pos, surf, group)
+        self.rect.bottom = self.rect.top + TILE_SIZE
 
 
 class Player(Generic):
