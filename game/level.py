@@ -32,7 +32,7 @@ class Level:
                         Generic(pos, asset_dict['water bottom'], self.all_sprites)
 
                 match data:
-                    case 0: self.player = Player(pos, self.all_sprites, self.collision_sprites)
+                    case 0: self.player = Player(pos, asset_dict['player'], self.all_sprites, self.collision_sprites)
 
                     # coins
                     case 4: Coin('gold', pos, asset_dict['gold'], [self.all_sprites, self.coin_sprites])
@@ -75,7 +75,6 @@ class Level:
 
         self.display_surface.fill(SKY_COLOUR)
         self.all_sprites.draw(self.display_surface)
-        pygame.draw.rect(self.display_surface, 'yellow', self.player.hitbox)
 
     def event_loop(self):
         for event in pygame.event.get():

@@ -447,7 +447,7 @@ class Editor:
         self.display_sky(dt)
         self.draw_level()
         self.draw_tile_lines()
-        # pygame.draw.circle(self.display_surface, 'red', self.origin, 10)
+
         self.preview()
         self.menu.display(self.selection_index)
 

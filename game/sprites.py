@@ -83,9 +83,15 @@ class Shell(Generic):
 
 
 class Player(Generic):
-    def __init__(self, pos, group, collision_sprites):
-        super().__init__(pos, pygame.Surface((80, 64)), group)
-        self.image.fill('purple')
+    def __init__(self, pos, assets, group, collision_sprites):
+        # animation
+        self.animation_frames = assets
+        self.frame_index = 0
+        self.status = 'idle'
+        self.orientation = 'right'
+        surf = self.animation_frames[f'{self.status}_{self.orientation}'][self.frame_index]
+
+        super().__init__(pos, surf, group)
 
         # movement
         self.direction = vector()
@@ -98,12 +104,28 @@ class Player(Generic):
         self.collision_sprites = collision_sprites
         self.hitbox = self.rect.inflate(-50, 0)
 
+    def get_status(self):
+        if self.direction.y < 0:
+            self.status = 'jump'
+        elif self.direction.y > 1:
+            self.status = 'fall'
+        else:
+             self.status = 'run' if self.direction.x != 0 else 'idle'
+
+    def animate(self, dt):
+        current_animation = self.animation_frames[f'{self.status}_{self.orientation}']
+        self.frame_index += ANIMATION_SPEED * dt
+        self.frame_index = 0 if self.frame_index >= len(current_animation) else self.frame_index
+        self.image = current_animation[int(self.frame_index)]
+
     def input(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
             self.direction.x = 1
+            self.orientation = 'right'
         elif keys[pygame.K_LEFT]:
             self.direction.x = -1
+            self.orientation = 'left'
         else:
             self.direction.x = 0
 
@@ -154,3 +176,6 @@ class Player(Generic):
         self.apply_gravity(dt)
         self.move(dt)
         self.check_on_floor()
+
+        self.get_status()
+        self.animate(dt)
