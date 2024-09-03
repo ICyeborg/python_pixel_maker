@@ -42,7 +42,8 @@ class Level:
 
                     # enemies
                     case 7: Spikes(pos, asset_dict['spikes'], [self.all_sprites, self.damage_sprites])
-                    case 8: Tooth(pos, asset_dict['tooth'], [self.all_sprites, self.damage_sprites])
+                    case 8:
+                        Tooth(pos, asset_dict['tooth'], [self.all_sprites, self.damage_sprites], self.collision_sprites)
                     case 9:
                         Shell(
                             orientation='left',
