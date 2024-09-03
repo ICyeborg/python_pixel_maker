@@ -15,6 +15,7 @@ class Level:
         self.coin_sprites = pygame.sprite.Group()
         self.damage_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
+        self.shell_sprites = pygame.sprite.Group()
 
         self.build_level(grid, asset_dict)
 
@@ -42,8 +43,22 @@ class Level:
                     # enemies
                     case 7: Spikes(pos, asset_dict['spikes'], [self.all_sprites, self.damage_sprites])
                     case 8: Tooth(pos, asset_dict['tooth'], [self.all_sprites, self.damage_sprites])
-                    case 9: Shell('left', pos, asset_dict['shell'], [self.all_sprites, self.collision_sprites])
-                    case 10: Shell('right', pos, asset_dict['shell'], [self.all_sprites, self.collision_sprites])
+                    case 9:
+                        Shell(
+                            orientation='left',
+                            pos=pos,
+                            assets=asset_dict['shell'],
+                            group=[self.all_sprites, self.collision_sprites, self.shell_sprites],
+                            pearl_surf=asset_dict['pearl'],
+                            damage_sprites=self.damage_sprites)
+                    case 10:
+                        Shell(
+                            orientation='right',
+                            pos=pos,
+                            assets=asset_dict['shell'],
+                            group=[self.all_sprites, self.collision_sprites, self.shell_sprites],
+                            pearl_surf=asset_dict['pearl'],
+                            damage_sprites=self.damage_sprites)
 
                     # palm trees
                     case 11:
@@ -62,6 +77,9 @@ class Level:
                     case 16: Animated(pos, asset_dict['palms']['large_bg'], self.all_sprites, LEVEL_LAYERS['bg'])
                     case 17: Animated(pos, asset_dict['palms']['left_bg'], self.all_sprites, LEVEL_LAYERS['bg'])
                     case 18: Animated(pos, asset_dict['palms']['right_bg'], self.all_sprites, LEVEL_LAYERS['bg'])
+
+        for sprite in self.shell_sprites:
+            sprite.player = self.player
 
     def get_coins(self):
         collided_coins = pygame.sprite.spritecollide(self.player, self.coin_sprites, True)
