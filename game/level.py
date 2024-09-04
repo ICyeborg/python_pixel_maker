@@ -87,10 +87,17 @@ class Level:
         for sprite in collided_coins:
             Particle(sprite.rect.center, self.particle_surfs, self.all_sprites)
 
+    def get_damage(self):
+        collision_sprites = pygame.sprite.spritecollide(self.player, self.damage_sprites,
+                                                        False, pygame.sprite.collide_mask)
+        if collision_sprites:
+            self.player.get_damage()
+
     def run(self, dt):
         self.event_loop()
         self.all_sprites.update(dt)
         self.get_coins()
+        self.get_damage()
 
         self.display_surface.fill(SKY_COLOUR)
         self.all_sprites.custom_draw(self.player)

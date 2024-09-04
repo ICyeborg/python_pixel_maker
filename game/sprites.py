@@ -59,6 +59,7 @@ class Coin(Animated):
 class Spikes(Generic):
     def __init__(self, pos, surf, group):
         super().__init__(pos, surf, group)
+        self.mask = pygame.mask.from_surface(self.image)
 
 
 class Tooth(Generic):
@@ -69,6 +70,7 @@ class Tooth(Generic):
         surf = self.animation_frames[f'run_{self.orientation}'][self.frame_index]
         super().__init__(pos, surf, group)
         self.rect.bottom = self.rect.top + TILE_SIZE
+        self.mask = pygame.mask.from_surface(self.image)
 
         # movement
         self.direction = vector(choice((1, -1)), 0)
@@ -85,6 +87,7 @@ class Tooth(Generic):
         self.frame_index += ANIMATION_SPEED * dt
         self.frame_index = 0 if self.frame_index >= len(current_animation) else self.frame_index
         self.image = current_animation[int(self.frame_index)]
+        self.mask = pygame.mask.from_surface(self.image)
 
     def move(self, dt):
         right_gap = self.rect.bottomright + vector(1, 1)
@@ -164,6 +167,7 @@ class Shell(Generic):
 class Pearl(Generic):
     def __init__(self, pos, direction, surf, group):
         super().__init__(pos, surf, group)
+        self.mask = pygame.mask.from_surface(self.image)
 
         # movement
         self.pos = vector(self.rect.topleft)
@@ -195,6 +199,7 @@ class Player(Generic):
         surf = self.animation_frames[f'{self.status}_{self.orientation}'][self.frame_index]
 
         super().__init__(pos, surf, group)
+        self.mask = pygame.mask.from_surface(self.image)
 
         # movement
         self.direction = vector()
@@ -207,6 +212,9 @@ class Player(Generic):
         self.collision_sprites = collision_sprites
         self.hitbox = self.rect.inflate(-50, 0)
 
+        # timer
+        self.damage_cooldown = Timer(200)
+
     def get_status(self):
         if self.direction.y < 0:
             self.status = 'jump'
@@ -215,11 +223,22 @@ class Player(Generic):
         else:
             self.status = 'run' if self.direction.x != 0 else 'idle'
 
+    def get_damage(self):
+        if not self.damage_cooldown.active:
+            self.damage_cooldown.activate()
+            self.direction.y -= 1.5
+
     def animate(self, dt):
         current_animation = self.animation_frames[f'{self.status}_{self.orientation}']
         self.frame_index += ANIMATION_SPEED * dt
         self.frame_index = 0 if self.frame_index >= len(current_animation) else self.frame_index
         self.image = current_animation[int(self.frame_index)]
+        self.mask = pygame.mask.from_surface(self.image)
+
+        if self.damage_cooldown.active:
+            surf = self.mask.to_surface()
+            surf.set_colorkey('black')
+            self.image = surf
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -279,6 +298,7 @@ class Player(Generic):
         self.apply_gravity(dt)
         self.move(dt)
         self.check_on_floor()
+        self.damage_cooldown.update()
 
         self.get_status()
         self.animate(dt)
